@@ -1,0 +1,72 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Frontend: Node, Next.js, and TypeScript
+**/node_modules/
+**/.pnp
+**/.pnp.*
+**/.yarn/*
+!**/.yarn/patches/
+!**/.yarn/plugins/
+!**/.yarn/releases/
+!**/.yarn/versions/
+**/.next/
+**/out/
+**/build/
+**/coverage/
+**/*.tsbuildinfo
+**/next-env.d.ts
+**/.vercel/
+
+# Backend: Maven, Java, and Spring Boot
+**/target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+**/.apt_generated/
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings/
+**/.springBeans
+**/.sts4-cache/
+**/*.class
+**/*.jar
+**/*.war
+**/*.ear
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Local data exports
+*.csv
+
+# Agent/runtime local state
+.agents/
+skills-lock.json
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+*.tfplan
