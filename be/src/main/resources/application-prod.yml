@@ -11,3 +11,7 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+portfolio:
+  security:
+    cookie-secure: ${JWT_COOKIE_SECURE:true}

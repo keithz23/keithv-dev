@@ -54,6 +54,6 @@ class SecurityConfigTests {
 	}
 
 	private SecurityProperties propertiesWithSecret(String secret) {
-		return new SecurityProperties(secret, 60, null, null);
+		return new SecurityProperties(secret, 60, null, null, false);
 	}
 }

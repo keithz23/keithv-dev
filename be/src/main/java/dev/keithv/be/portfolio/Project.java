@@ -111,8 +111,20 @@ public class Project {
 		if (iconKey != null) this.iconKey = iconKey;
 		if (isFeatured != null) this.isFeatured = isFeatured;
 		if (displayOrder != null) this.displayOrder = displayOrder;
-		if (highlights != null) replaceHighlights(highlights);
-		if (technologies != null) replaceTechnologies(technologies);
+		if (highlights != null && !currentHighlights().equals(highlights)) {
+			replaceHighlights(highlights);
+		}
+		if (technologies != null && !currentTechnologies().equals(technologies)) {
+			replaceTechnologies(technologies);
+		}
+	}
+
+	private List<String> currentHighlights() {
+		return highlights.stream().map(ProjectHighlight::getText).toList();
+	}
+
+	private List<String> currentTechnologies() {
+		return technologies.stream().map(ProjectTechnology::getName).toList();
 	}
 
 	private void replaceHighlights(List<String> values) {

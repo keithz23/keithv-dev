@@ -4,9 +4,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "portfolio.security")
 public record SecurityProperties(
-	String jwtSecret,
-	long accessTokenMinutes,
-	String localAdminEmail,
-	String localAdminPassword
+        String jwtSecret,
+        long accessTokenMinutes,
+        String localAdminEmail,
+        String localAdminPassword,
+        boolean cookieSecure
 ) {
 }

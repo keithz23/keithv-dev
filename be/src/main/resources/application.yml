@@ -32,3 +32,4 @@ portfolio:
     access-token-minutes: ${JWT_ACCESS_TOKEN_MINUTES:30}
     local-admin-email: ${ADMIN_EMAIL:}
     local-admin-password: ${ADMIN_PASSWORD:}
+    cookie-secure: ${JWT_COOKIE_SECURE:false}
