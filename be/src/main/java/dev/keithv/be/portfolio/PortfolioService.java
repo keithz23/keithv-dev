@@ -6,7 +6,6 @@ import dev.keithv.be.portfolio.PortfolioResponse.EducationResponse;
 import dev.keithv.be.portfolio.PortfolioResponse.ExperienceResponse;
 import dev.keithv.be.portfolio.PortfolioResponse.NavigationLinkResponse;
 import dev.keithv.be.portfolio.PortfolioResponse.ProfileResponse;
-import dev.keithv.be.portfolio.PortfolioResponse.ProjectResponse;
 import dev.keithv.be.portfolio.PortfolioResponse.SocialLinkResponse;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -25,6 +24,7 @@ public class PortfolioService {
 	private final WorkExperienceRepository workExperienceRepository;
 	private final EducationRepository educationRepository;
 	private final ProjectRepository projectRepository;
+	private final ProjectMapper projectMapper;
 
 	public PortfolioService(
 		PortfolioProfileRepository profileRepository,
@@ -34,7 +34,8 @@ public class PortfolioService {
 		CapabilityRepository capabilityRepository,
 		WorkExperienceRepository workExperienceRepository,
 		EducationRepository educationRepository,
-		ProjectRepository projectRepository
+		ProjectRepository projectRepository,
+		ProjectMapper projectMapper
 	) {
 		this.profileRepository = profileRepository;
 		this.navigationLinkRepository = navigationLinkRepository;
@@ -44,6 +45,7 @@ public class PortfolioService {
 		this.workExperienceRepository = workExperienceRepository;
 		this.educationRepository = educationRepository;
 		this.projectRepository = projectRepository;
+		this.projectMapper = projectMapper;
 	}
 
 	public PortfolioResponse getPortfolio() {
@@ -122,13 +124,13 @@ public class PortfolioService {
 
 	public List<ProjectResponse> getProjects() {
 		return projectRepository.findAllByOrderByDisplayOrderAsc().stream()
-			.map(this::toProject)
+			.map(projectMapper::toResponse)
 			.toList();
 	}
 
 	public List<ProjectResponse> getFeaturedProjects() {
 		return projectRepository.findAllByIsFeaturedTrueOrderByDisplayOrderAsc().stream()
-			.map(this::toProject)
+			.map(projectMapper::toResponse)
 			.toList();
 	}
 
@@ -169,19 +171,4 @@ public class PortfolioService {
 		);
 	}
 
-	private ProjectResponse toProject(Project project) {
-		return new ProjectResponse(
-			project.getId(),
-			project.getNumber(),
-			project.getTitle(),
-			project.getLabel(),
-			project.getDescription(),
-			project.getHighlights().stream().map(ProjectHighlight::getText).toList(),
-			project.getTechnologies().stream().map(ProjectTechnology::getName).toList(),
-			project.getGithubUrl(),
-			project.getVisualKey(),
-			project.getIconKey(),
-			project.isFeatured()
-		);
-	}
 }

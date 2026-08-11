@@ -9,7 +9,7 @@ import {
   Warehouse,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon } from "@phosphor-icons/react/dist/lib/types";
-import type { Project } from "@/lib/portfolio-api";
+import type { Project } from "@/lib/project-api";
 
 const projectIcons: Record<string, Icon> = {
   book: BookOpenText,
@@ -215,7 +215,18 @@ export default function ProjectsSection({ projects }: { projects: Project[] }) {
           </div>
         </header>
 
-        <div className="mt-20 space-y-8">
+        {projects.length === 0 && (
+          <div className="mt-20 border-y border-zinc-300 py-12 dark:border-zinc-700">
+            <p className="section-index">Project archive</p>
+            <p className="mt-4 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              No projects are available yet.
+            </p>
+          </div>
+        )}
+
+        <div
+          className={projects.length === 0 ? "hidden" : "mt-20 space-y-8"}
+        >
           {featuredProjects.map((project, index) => (
             <FeaturedProject
               key={project.title}
@@ -225,7 +236,13 @@ export default function ProjectsSection({ projects }: { projects: Project[] }) {
           ))}
         </div>
 
-        <div className="mt-28 grid gap-10 border-t border-zinc-300 pt-10 lg:grid-cols-[.58fr_1.42fr] lg:gap-20 dark:border-zinc-700">
+        <div
+          className={
+            projects.length === 0
+              ? "hidden"
+              : "mt-28 grid gap-10 border-t border-zinc-300 pt-10 lg:grid-cols-[.58fr_1.42fr] lg:gap-20 dark:border-zinc-700"
+          }
+        >
           <div>
             <p className="section-index">Project archive</p>
             <p className="mt-5 max-w-xs text-sm leading-6 text-zinc-500 dark:text-zinc-400">
@@ -276,5 +293,41 @@ export default function ProjectsSection({ projects }: { projects: Project[] }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function ProjectState({ message }: { message: string }) {
+  return (
+    <section
+      id="projects"
+      className="section-shell border-t border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950"
+    >
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-8 lg:px-10">
+        <header className="grid gap-8 lg:grid-cols-[.58fr_1.42fr] lg:gap-20">
+          <p className="section-index">02 / Selected work</p>
+          <div>
+            <h2 className="section-title max-w-[13ch]">
+              Systems explained through decisions, not decoration.
+            </h2>
+            <p
+              className="mt-7 max-w-[61ch] text-sm leading-7 text-zinc-500 dark:text-zinc-400"
+              role="status"
+            >
+              {message}
+            </p>
+          </div>
+        </header>
+      </div>
+    </section>
+  );
+}
+
+export function ProjectsLoadingState() {
+  return <ProjectState message="Loading selected projects…" />;
+}
+
+export function ProjectsErrorState() {
+  return (
+    <ProjectState message="Projects are temporarily unavailable. Please try again shortly." />
   );
 }

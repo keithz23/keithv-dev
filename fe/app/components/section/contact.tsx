@@ -10,22 +10,19 @@ import {
   PaperPlaneTilt,
 } from "@phosphor-icons/react";
 import type { Profile, SocialLink } from "@/lib/portfolio-api";
+import { useSendContactMessage } from "@/lib/contact-queries";
 
 type FieldErrors = Partial<Record<"name" | "email" | "message", string>>;
 
 export default function ContactSection({
   profile,
   socialLinks,
-  apiBaseUrl,
 }: {
   profile: Profile;
   socialLinks: SocialLink[];
-  apiBaseUrl: string;
 }) {
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
-    "idle",
-  );
+	const [errors, setErrors] = useState<FieldErrors>({});
+  const mutation = useSendContactMessage();
   const github = socialLinks.find((link) => link.label === "GitHub");
   const linkedIn = socialLinks.find((link) => link.label === "LinkedIn");
 
@@ -33,7 +30,7 @@ export default function ContactSection({
     setErrors((current) =>
       current[field] ? { ...current, [field]: undefined } : current,
     );
-    setStatus("idle");
+		mutation.reset();
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -54,20 +51,7 @@ export default function ContactSection({
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
 
-    setStatus("sending");
-    const response = await fetch(`${apiBaseUrl}/contact-messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, message }),
-    }).catch(() => null);
-
-    if (!response?.ok) {
-      setStatus("error");
-      return;
-    }
-
-    formElement.reset();
-    setStatus("sent");
+		mutation.mutate({ name, email, message }, { onSuccess: () => formElement.reset() });
   };
 
   return (
@@ -212,18 +196,18 @@ export default function ContactSection({
             <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="submit"
-                disabled={status === "sending"}
+				disabled={mutation.isPending}
                 className="button-primary"
               >
-                {status === "sending"
+				{mutation.isPending
                   ? "Sending..."
                   : profile.contactFormButtonLabel}{" "}
                 <PaperPlaneTilt size={17} weight="regular" />
               </button>
               <p className="max-w-xs text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-                {status === "sent"
+				{mutation.isSuccess
                   ? "Message received. I will follow up soon."
-                  : status === "error"
+					: mutation.isError
                     ? "Something went wrong. Please try again."
                     : profile.contactPrivacyNote}
               </p>

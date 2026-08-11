@@ -30,6 +30,9 @@ public class WorkExperienceHighlight {
 
 	protected WorkExperienceHighlight() {
 	}
+	WorkExperienceHighlight(WorkExperience experience, String text, int displayOrder) {
+		this.experience = experience; this.text = text; this.displayOrder = displayOrder;
+	}
 
 	public UUID getId() {
 		return id;

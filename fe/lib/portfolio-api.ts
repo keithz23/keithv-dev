@@ -1,4 +1,5 @@
-import { connection } from "next/server";
+import { apiClient } from "./api-client";
+import type { Project } from "./project-api";
 
 export type Profile = {
   id: string;
@@ -72,20 +73,6 @@ export type Education = {
   focus: string;
 };
 
-export type Project = {
-  id: string;
-  number: string;
-  title: string;
-  label: string;
-  description: string;
-  highlights: string[];
-  tech: string[];
-  github: string | null;
-  visualKey: string | null;
-  iconKey: string;
-  isFeatured: boolean;
-};
-
 export type PortfolioData = {
   profile: Profile;
   navigationLinks: NavigationLink[];
@@ -97,27 +84,7 @@ export type PortfolioData = {
   projects: Project[];
 };
 
-export function getPortfolioApiBaseUrl() {
-  return process.env.PORTFOLIO_API_BASE_URL ?? "http://localhost:8080/api/v1";
-}
-
-export function getPublicPortfolioApiBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_PORTFOLIO_API_BASE_URL ??
-    "http://localhost:8080/api/v1"
-  );
-}
-
 export async function getPortfolioData(): Promise<PortfolioData> {
-  await connection();
-
-  const response = await fetch(`${getPortfolioApiBaseUrl()}/portfolio`, {
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(`Portfolio API request failed: ${response.status}`);
-  }
-
-  return response.json();
+  const { data } = await apiClient.get<PortfolioData>("/portfolio");
+  return data;
 }

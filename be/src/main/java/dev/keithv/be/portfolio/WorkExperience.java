@@ -47,6 +47,25 @@ public class WorkExperience {
 
 	protected WorkExperience() {
 	}
+	public WorkExperience(String role, String company, String location, String period, String detailLinkLabel, String detailLinkUrl, int displayOrder, List<String> highlights) {
+		this.role = role; this.company = company; this.location = location; this.period = period;
+		this.detailLinkLabel = detailLinkLabel; this.detailLinkUrl = detailLinkUrl; this.displayOrder = displayOrder;
+		replaceHighlights(highlights);
+	}
+	public void update(String role, String company, String location, String period, String detailLinkLabel, String detailLinkUrl, Integer displayOrder, List<String> highlights) {
+		if (role != null) this.role = role;
+		if (company != null) this.company = company;
+		if (location != null) this.location = location;
+		if (period != null) this.period = period;
+		if (detailLinkLabel != null) this.detailLinkLabel = detailLinkLabel;
+		if (detailLinkUrl != null) this.detailLinkUrl = detailLinkUrl;
+		if (displayOrder != null) this.displayOrder = displayOrder;
+		if (highlights != null) replaceHighlights(highlights);
+	}
+	private void replaceHighlights(List<String> values) {
+		highlights.clear();
+		for (int index = 0; index < values.size(); index++) highlights.add(new WorkExperienceHighlight(this, values.get(index), index + 1));
+	}
 
 	public UUID getId() {
 		return id;

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CircleHalf, List, X } from "@phosphor-icons/react";
 import Image from "next/image";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 import type { NavigationLink, Profile } from "@/lib/portfolio-api";
 
 export default function Navbar({
@@ -18,23 +18,41 @@ export default function Navbar({
   const { resolvedTheme, setTheme } = useTheme();
 
   useEffect(() => {
-    const sections = ["home", ...links.map((link) => link.id)]
-      .map((id) => document.getElementById(id))
-      .filter(Boolean) as HTMLElement[];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible?.target.id) setActive(visible.target.id);
-      },
-      { rootMargin: "-20% 0px -65%", threshold: [0, 0.2, 0.5] },
-    );
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
+    const sectionIds = ["home", ...links.map((link) => link.id)];
+    let animationFrame = 0;
+
+    const updateActiveSection = () => {
+      const sections = sectionIds
+        .map((id) => document.getElementById(id))
+        .filter(Boolean) as HTMLElement[];
+      const readingLine = Math.max(96, window.innerHeight * 0.3);
+      const current = sections.findLast(
+        (section) => section.getBoundingClientRect().top <= readingLine,
+      );
+
+      if (current) {
+        setActive(current.id === "home" ? (links[0]?.id ?? "about") : current.id);
+      }
+    };
+
+    const handleScroll = () => {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = requestAnimationFrame(updateActiveSection);
+    };
+
+    updateActiveSection();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
   }, [links]);
 
   const go = (id: string) => {
+    setActive(id);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setOpen(false);
   };
@@ -48,7 +66,13 @@ export default function Navbar({
         <div className="mx-auto grid h-20 max-w-7xl grid-cols-[1fr_auto] items-center px-4 sm:px-8 md:grid-cols-[1fr_auto_1fr] lg:px-10">
           <button
             type="button"
-            onClick={() => go("home")}
+            onClick={() => {
+              setActive(links[0]?.id ?? "about");
+              document
+                .getElementById("home")
+                ?.scrollIntoView({ behavior: "smooth" });
+              setOpen(false);
+            }}
             className="group flex w-fit items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <span className="grid h-9 w-9 place-items-center bg-zinc-900 font-mono text-xs font-semibold text-white transition-transform duration-300 group-hover:-rotate-3 group-active:scale-[.98] dark:bg-zinc-100 dark:text-zinc-950">

@@ -73,18 +73,4 @@ public record PortfolioResponse(
 	public record EducationResponse(UUID id, String degree, String institution, String focus) {
 	}
 
-	public record ProjectResponse(
-		UUID id,
-		String number,
-		String title,
-		String label,
-		String description,
-		List<String> highlights,
-		List<String> tech,
-		String github,
-		String visualKey,
-		String iconKey,
-		boolean isFeatured
-	) {
-	}
 }

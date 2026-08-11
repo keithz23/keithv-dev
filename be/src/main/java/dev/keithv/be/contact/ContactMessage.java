@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -27,7 +29,8 @@ public class ContactMessage {
 	private String message;
 
 	@Column(nullable = false)
-	private String status = "NEW";
+	@Enumerated(EnumType.STRING)
+	private ContactMessageStatus status = ContactMessageStatus.NEW;
 
 	@Column(nullable = false, updatable = false)
 	private OffsetDateTime createdAt;
@@ -58,9 +61,11 @@ public class ContactMessage {
 		return message;
 	}
 
-	public String getStatus() {
+	public ContactMessageStatus getStatus() {
 		return status;
 	}
+
+	public void updateStatus(ContactMessageStatus status) { this.status = status; }
 
 	public OffsetDateTime getCreatedAt() {
 		return createdAt;

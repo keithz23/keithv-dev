@@ -26,6 +26,14 @@ public class SocialLink {
 
 	protected SocialLink() {
 	}
+	public SocialLink(String label, String url, int displayOrder) {
+		this.label = label; this.url = url; this.displayOrder = displayOrder;
+	}
+	public void update(String label, String url, Integer displayOrder) {
+		if (label != null) this.label = label;
+		if (url != null) this.url = url;
+		if (displayOrder != null) this.displayOrder = displayOrder;
+	}
 
 	public UUID getId() {
 		return id;

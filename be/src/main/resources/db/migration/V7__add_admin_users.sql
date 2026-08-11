@@ -1,0 +1,11 @@
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    email VARCHAR(254) NOT NULL,
+    password_hash VARCHAR(100) NOT NULL,
+    role VARCHAR(30) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_users_email UNIQUE (email),
+    CONSTRAINT chk_users_role CHECK (role IN ('ADMIN'))
+);

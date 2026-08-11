@@ -5,7 +5,6 @@ import dev.keithv.be.portfolio.PortfolioResponse.EducationResponse;
 import dev.keithv.be.portfolio.PortfolioResponse.ExperienceResponse;
 import dev.keithv.be.portfolio.PortfolioResponse.NavigationLinkResponse;
 import dev.keithv.be.portfolio.PortfolioResponse.ProfileResponse;
-import dev.keithv.be.portfolio.PortfolioResponse.ProjectResponse;
 import dev.keithv.be.portfolio.PortfolioResponse.SocialLinkResponse;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,13 +55,4 @@ public class PortfolioController {
 		return portfolioService.getEducations();
 	}
 
-	@GetMapping("/projects")
-	public List<ProjectResponse> projects() {
-		return portfolioService.getProjects();
-	}
-
-	@GetMapping("/projects/featured")
-	public List<ProjectResponse> featuredProjects() {
-		return portfolioService.getFeaturedProjects();
-	}
 }

@@ -29,6 +29,15 @@ public class Education {
 
 	protected Education() {
 	}
+	public Education(String degree, String institution, String focus, int displayOrder) {
+		this.degree = degree; this.institution = institution; this.focus = focus; this.displayOrder = displayOrder;
+	}
+	public void update(String degree, String institution, String focus, Integer displayOrder) {
+		if (degree != null) this.degree = degree;
+		if (institution != null) this.institution = institution;
+		if (focus != null) this.focus = focus;
+		if (displayOrder != null) this.displayOrder = displayOrder;
+	}
 
 	public UUID getId() {
 		return id;

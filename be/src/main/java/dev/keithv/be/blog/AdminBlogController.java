@@ -1,5 +1,6 @@
 package dev.keithv.be.blog;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/admin")
+@SecurityRequirement(name = "bearerAuth")
 public class AdminBlogController {
 	private final BlogService blogService;
 

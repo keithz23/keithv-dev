@@ -31,6 +31,12 @@ public class ProjectTechnology {
 	protected ProjectTechnology() {
 	}
 
+	ProjectTechnology(Project project, String name, int displayOrder) {
+		this.project = project;
+		this.name = name;
+		this.displayOrder = displayOrder;
+	}
+
 	public UUID getId() {
 		return id;
 	}

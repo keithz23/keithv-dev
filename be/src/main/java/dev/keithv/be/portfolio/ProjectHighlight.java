@@ -31,6 +31,12 @@ public class ProjectHighlight {
 	protected ProjectHighlight() {
 	}
 
+	ProjectHighlight(Project project, String text, int displayOrder) {
+		this.project = project;
+		this.text = text;
+		this.displayOrder = displayOrder;
+	}
+
 	public UUID getId() {
 		return id;
 	}

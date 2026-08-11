@@ -1,10 +1,16 @@
 package dev.keithv.be;
 
+import dev.keithv.be.auth.AdminUser;
+import dev.keithv.be.auth.AdminUserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.everyItem;
@@ -13,15 +19,33 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 class BeApplicationTests {
 	@Autowired
 	private MockMvc mvc;
+	@Autowired
+	private AdminUserRepository userRepository;
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@BeforeEach
+	void ensureAdminUser() {
+		if (!userRepository.existsByEmailIgnoreCase("admin@test.local")) {
+			userRepository.save(new AdminUser("admin@test.local", passwordEncoder.encode("test-password")));
+		}
+	}
+
+	private RequestPostProcessor adminJwt() {
+		return jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
+	}
 
 	@Test
 	void contextLoads() {
@@ -86,7 +110,7 @@ class BeApplicationTests {
 			}
 			""";
 
-		mvc.perform(post("/admin/posts")
+		mvc.perform(post("/admin/posts").with(adminJwt())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(payload))
 			.andExpect(status().isCreated())
@@ -96,7 +120,144 @@ class BeApplicationTests {
 
 	@Test
 	void adminCannotDeleteAttachedTag() throws Exception {
-		mvc.perform(delete("/admin/tags/10000000-0000-0000-0000-000000000002"))
+		mvc.perform(delete("/admin/tags/10000000-0000-0000-0000-000000000002").with(adminJwt()))
 			.andExpect(status().isConflict());
+	}
+
+	@Test
+	void adminCanCreateProject() throws Exception {
+		String payload = """
+			{
+			  "number": "99",
+			  "slug": "project-module-test",
+			  "title": "Project Module Test",
+			  "label": "Backend integration",
+			  "description": "A project created by the project module integration test.",
+			  "github": "https://github.com/example/project-module-test",
+			  "iconKey": "code",
+			  "isFeatured": false,
+			  "displayOrder": 99,
+			  "highlights": ["Validated project creation"],
+			  "tech": ["Java", "Spring Boot"]
+			}
+			""";
+
+		mvc.perform(post("/admin/projects").with(adminJwt())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(payload))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.slug").value("project-module-test"))
+			.andExpect(jsonPath("$.tech[0]").value("Java"));
+	}
+
+	@Test
+	void adminCanCreateCapability() throws Exception {
+		String payload = """
+			{
+			  "index": "99",
+			  "title": "API integration testing",
+			  "detail": "A capability created through the protected admin API.",
+			  "displayOrder": 99
+			}
+			""";
+
+		mvc.perform(post("/admin/capabilities").with(adminJwt())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(payload))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.title").value("API integration testing"))
+			.andExpect(jsonPath("$.displayOrder").value(99));
+	}
+
+	@Test
+	void adminCanListContactMessages() throws Exception {
+		mvc.perform(get("/admin/contact-messages").with(adminJwt()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content").isArray());
+	}
+
+	@Test
+	void createProjectRejectsInvalidRequest() throws Exception {
+		mvc.perform(post("/admin/projects").with(adminJwt())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value("Validation failed"))
+			.andExpect(jsonPath("$.fieldErrors.slug").exists());
+	}
+
+	@Test
+	void createProjectRejectsDuplicateSlug() throws Exception {
+		String payload = """
+			{
+			  "number": "98",
+			  "slug": "bluesky-social",
+			  "title": "Duplicate Slug Test",
+			  "label": "Backend integration",
+			  "description": "This payload intentionally reuses a seeded slug.",
+			  "iconKey": "code",
+			  "isFeatured": false,
+			  "displayOrder": 98,
+			  "highlights": ["Duplicate detection"],
+			  "tech": ["Java"]
+			}
+			""";
+
+		mvc.perform(post("/admin/projects").with(adminJwt())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(payload))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.message").value("Project slug already exists"));
+	}
+
+	@Test
+	void getProjectBySlugReturnsNotFound() throws Exception {
+		mvc.perform(get("/projects/project-that-does-not-exist"))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.message").value("Project not found"));
+	}
+
+	@Test
+	void adminEndpointRequiresAuthentication() throws Exception {
+		mvc.perform(post("/admin/projects")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
+	}
+
+	@Test
+	void adminPreflightAllowsLocalFrontendOrigin() throws Exception {
+		mvc.perform(options("/admin/projects")
+				.header("Origin", "http://localhost:3000")
+				.header("Access-Control-Request-Method", "PATCH")
+				.header("Access-Control-Request-Headers", "authorization"))
+			.andExpect(status().isOk())
+			.andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
+			.andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("PATCH")))
+			.andExpect(header().string("Access-Control-Allow-Headers", org.hamcrest.Matchers.containsStringIgnoringCase("authorization")));
+	}
+
+	@Test
+	void nonAdminTokenCannotAccessAdminEndpoint() throws Exception {
+		mvc.perform(post("/admin/projects")
+				.with(jwt().authorities(new SimpleGrantedAuthority("ROLE_USER")))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.code").value("FORBIDDEN"));
+	}
+
+	@Test
+	void adminCanLogin() throws Exception {
+		String payload = """
+			{"email":"admin@test.local","password":"test-password"}
+			""";
+		mvc.perform(post("/auth/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(payload))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.tokenType").value("Bearer"))
+			.andExpect(jsonPath("$.accessToken").isNotEmpty());
 	}
 }

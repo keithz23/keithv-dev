@@ -5,7 +5,7 @@ import java.util.UUID;
 
 public record ContactMessageResponse(
 	UUID id,
-	String status,
+	ContactMessageStatus status,
 	OffsetDateTime createdAt
 ) {
 }
