@@ -35,7 +35,7 @@ public class AuthService {
 	}
 
 	@Transactional(readOnly = true)
-	public LoginResponse login(LoginRequest request) {
+	public AuthLoginResult login(LoginRequest request) {
 		AdminUser user = userRepository.findByEmailIgnoreCase(request.email().trim())
 			.filter(AdminUser::isEnabled)
 			.orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
@@ -54,6 +54,9 @@ public class AuthService {
 			.claim("roles", List.of(user.getRole()))
 			.build();
 		String token = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-		return new LoginResponse(token, "Bearer", OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC));
+		return new AuthLoginResult(
+			new LoginResponse(OffsetDateTime.ofInstant(expiresAt, ZoneOffset.UTC)),
+			token
+		);
 	}
 }

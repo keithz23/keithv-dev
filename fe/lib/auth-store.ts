@@ -1,30 +1,19 @@
-const TOKEN_KEY = "portfolio_admin_access_token";
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+
+let status: AuthStatus = "loading";
 const listeners = new Set<() => void>();
 
-export function getAccessToken() {
-  if (typeof window === "undefined") return null;
-  const token = window.localStorage.getItem(TOKEN_KEY);
-  if (!token || !isUnexpiredJwt(token)) {
-    if (token) window.localStorage.removeItem(TOKEN_KEY);
-    return null;
-  }
-  return token;
+export function getAuthStatus() {
+  return status;
 }
 
-function isUnexpiredJwt(token: string) {
-  try {
-    const payload = JSON.parse(window.atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))) as { exp?: number };
-    return typeof payload.exp === "number" && payload.exp * 1000 > Date.now();
-  } catch { return false; }
-}
-
-export function setAccessToken(token: string) {
-  window.localStorage.setItem(TOKEN_KEY, token);
+export function markAuthenticated() {
+  status = "authenticated";
   listeners.forEach((listener) => listener());
 }
 
-export function clearAccessToken() {
-  if (typeof window !== "undefined") window.localStorage.removeItem(TOKEN_KEY);
+export function markUnauthenticated() {
+  status = "unauthenticated";
   listeners.forEach((listener) => listener());
 }
 

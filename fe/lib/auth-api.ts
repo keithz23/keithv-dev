@@ -11,12 +11,27 @@ export type ApiError = {
 
 export type LoginInput = { email: string; password: string };
 export type LoginResponse = {
-  accessToken: string;
-  tokenType: "Bearer";
   expiresAt: string;
+};
+
+export type AuthSessionResponse = {
+  id: string;
+  email: string;
+  role: string;
 };
 
 export async function login(input: LoginInput) {
   const { data } = await apiClient.post<LoginResponse>("/auth/login", input);
   return data;
+}
+
+export async function getSession() {
+  const { data } = await apiClient.get<AuthSessionResponse>("/auth/session", {
+    skipAuthRedirect: true,
+  });
+  return data;
+}
+
+export async function logout() {
+  await apiClient.post("/auth/logout");
 }

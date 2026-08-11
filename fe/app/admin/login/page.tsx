@@ -12,7 +12,7 @@ export default function AdminLoginPage() {
   const mutation = useLogin();
   const { login } = useAuth();
   const router = useRouter();
-  const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const data = new FormData(event.currentTarget); mutation.mutate({ email: String(data.get("email") ?? "").trim(), password: String(data.get("password") ?? "") }, { onSuccess: ({ accessToken }) => { login(accessToken); router.replace("/admin"); } }); };
+  const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const data = new FormData(event.currentTarget); mutation.mutate({ email: String(data.get("email") ?? "").trim(), password: String(data.get("password") ?? "") }, { onSuccess: () => { login(); router.replace("/admin"); } }); };
   const error = axios.isAxiosError<ApiError>(mutation.error) ? mutation.error.response?.data : null;
 
   return (

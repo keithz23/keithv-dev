@@ -33,16 +33,17 @@ function isActive(pathname: string, href: string) {
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { token, logout } = useAuth();
+  const { status, logout } = useAuth();
   const isLogin = pathname === "/admin/login";
 
   useEffect(() => {
-    if (!isLogin && !token) router.replace("/admin/login");
-    if (isLogin && token) router.replace("/admin");
-  }, [isLogin, router, token]);
+    if (status === "loading") return;
+    if (!isLogin && status === "unauthenticated") router.replace("/admin/login");
+    if (isLogin && status === "authenticated") router.replace("/admin");
+  }, [isLogin, router, status]);
 
   if (isLogin) return children;
-  if (!token) return <div className="min-h-[100dvh] bg-[#f7f6f3]" />;
+  if (status !== "authenticated") return <div className="min-h-[100dvh] bg-[#f7f6f3]" />;
 
   return (
     <div className="min-h-[100dvh] bg-[#f7f6f3] text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100">
@@ -91,7 +92,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <Link href="/" className="flex items-center justify-between px-3 py-2 text-xs text-zinc-500 transition-colors hover:text-zinc-950 dark:hover:text-white">
               Public portfolio <ArrowSquareOut size={14} weight="bold" />
             </Link>
-            <button type="button" onClick={() => { logout(); router.replace("/admin/login"); }} className="mt-1 flex w-full items-center gap-3 px-3 py-2 text-left text-xs text-zinc-500 transition-colors hover:bg-red-50 hover:text-red-700 active:translate-y-px dark:hover:bg-red-950/20 dark:hover:text-red-400">
+            <button type="button" onClick={() => { void logout().finally(() => router.replace("/admin/login")); }} className="mt-1 flex w-full items-center gap-3 px-3 py-2 text-left text-xs text-zinc-500 transition-colors hover:bg-red-50 hover:text-red-700 active:translate-y-px dark:hover:bg-red-950/20 dark:hover:text-red-400">
               <SignOut size={16} weight="bold" /> Sign out
             </button>
           </div>

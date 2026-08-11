@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .sessionManagement((sessions) -> sessions.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/auth/login", "/contact-messages").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/logout", "/contact-messages").permitAll()
                         .requestMatchers(HttpMethod.GET, "/portfolio", "/profile", "/navigation-links", "/social-links", "/capabilities", "/experiences", "/educations", "/projects/**", "/posts/**", "/tags", "/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()

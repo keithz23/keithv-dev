@@ -1,26 +1,53 @@
 "use client";
 
-import { createContext, useContext, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 import {
-  clearAccessToken,
-  getAccessToken,
-  setAccessToken,
+  getAuthStatus,
+  markAuthenticated,
+  markUnauthenticated,
   subscribeToAuth,
 } from "@/lib/auth-store";
+import { getSession, logout as logoutRequest } from "@/lib/auth-api";
 
 type AuthContextValue = {
-  token: string | null;
-  login: (token: string) => void;
-  logout: () => void;
+  status: ReturnType<typeof getAuthStatus>;
+  login: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const token = useSyncExternalStore(subscribeToAuth, getAccessToken, () => null);
+  const status = useSyncExternalStore(subscribeToAuth, getAuthStatus, getAuthStatus);
+
+  useEffect(() => {
+    let active = true;
+    getSession()
+      .then(() => {
+        if (active) markAuthenticated();
+      })
+      .catch(() => {
+        if (active) markUnauthenticated();
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const logout = async () => {
+    try {
+      await logoutRequest();
+    } catch {
+      // Clear the local auth state even when the API is unavailable.
+    } finally {
+      markUnauthenticated();
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ token, login: setAccessToken, logout: clearAccessToken }}
+      value={{ status, login: markAuthenticated, logout }}
     >
       {children}
     </AuthContext.Provider>

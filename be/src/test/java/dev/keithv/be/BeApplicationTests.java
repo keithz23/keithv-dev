@@ -7,11 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import jakarta.servlet.http.Cookie;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
@@ -257,7 +260,33 @@ class BeApplicationTests {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(payload))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.tokenType").value("Bearer"))
-			.andExpect(jsonPath("$.accessToken").isNotEmpty());
+			.andExpect(jsonPath("$.accessToken").doesNotExist())
+			.andExpect(jsonPath("$.expiresAt").isNotEmpty())
+			.andExpect(header().string(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.containsString("HttpOnly")));
+	}
+
+	@Test
+	void adminCanReadSessionFromCookie() throws Exception {
+		String payload = """
+			{"email":"admin@test.local","password":"test-password"}
+			""";
+		MvcResult login = mvc.perform(post("/auth/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(payload))
+			.andReturn();
+		String setCookie = login.getResponse().getHeader(HttpHeaders.SET_COOKIE);
+		String token = setCookie.substring(setCookie.indexOf('=') + 1, setCookie.indexOf(';'));
+
+		mvc.perform(get("/auth/session").cookie(new Cookie("accessToken", token)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.email").value("admin@test.local"))
+			.andExpect(jsonPath("$.role").value("ADMIN"));
+	}
+
+	@Test
+	void logoutClearsAuthenticationCookie() throws Exception {
+		mvc.perform(post("/auth/logout"))
+			.andExpect(status().isNoContent())
+			.andExpect(header().string(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.containsString("Max-Age=0")));
 	}
 }

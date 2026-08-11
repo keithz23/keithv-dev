@@ -1,5 +1,11 @@
 import axios from "axios";
-import { clearAccessToken, getAccessToken } from "./auth-store";
+import { markUnauthenticated } from "./auth-store";
+
+declare module "axios" {
+  interface AxiosRequestConfig {
+    skipAuthRedirect?: boolean;
+  }
+}
 
 export const apiClient = axios.create({
   baseURL:
@@ -12,21 +18,15 @@ export const apiClient = axios.create({
   },
 });
 
-apiClient.interceptors.request.use((config) => {
-  const accessToken = getAccessToken();
-
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  return config;
-});
-
 apiClient.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      clearAccessToken();
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.status === 401 &&
+      !error.config?.skipAuthRedirect
+    ) {
+      markUnauthenticated();
       if (
         typeof window !== "undefined" &&
         window.location.pathname !== "/admin/login"
