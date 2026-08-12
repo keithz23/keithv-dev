@@ -2,6 +2,7 @@
 
 import {
   ArrowSquareOut,
+  Article,
   Briefcase,
   ChatCircleText,
   CirclesFour,
@@ -19,6 +20,7 @@ import { useAuth } from "@/components/auth-provider";
 const links = [
   { href: "/admin", label: "Overview", icon: House },
   { href: "/admin/projects", label: "Projects", icon: Stack },
+  { href: "/admin/blog", label: "Blog", icon: Article },
   { href: "/admin/capabilities", label: "Capabilities", icon: CirclesFour },
   { href: "/admin/experiences", label: "Experience", icon: Briefcase },
   { href: "/admin/educations", label: "Education", icon: GraduationCap },

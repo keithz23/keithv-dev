@@ -1,13 +1,14 @@
-import { ArrowUpRight, Briefcase, ChatCircleText, CirclesFour, GraduationCap, LinkSimple, Stack } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, Article, Briefcase, ChatCircleText, CirclesFour, GraduationCap, LinkSimple, Stack } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 
 const resources = [
   { href: "/admin/projects", label: "Projects", description: "Case studies, technologies and featured work.", icon: Stack, index: "01" },
-  { href: "/admin/capabilities", label: "Capabilities", description: "The services and technical strengths on your profile.", icon: CirclesFour, index: "02" },
-  { href: "/admin/experiences", label: "Experience", description: "Roles, companies, timelines and role highlights.", icon: Briefcase, index: "03" },
-  { href: "/admin/educations", label: "Education", description: "Degrees, institutions and areas of focus.", icon: GraduationCap, index: "04" },
-  { href: "/admin/social-links", label: "Social links", description: "Public destinations shown in contact and footer areas.", icon: LinkSimple, index: "05" },
-  { href: "/admin/contact-messages", label: "Messages", description: "Review and archive incoming portfolio enquiries.", icon: ChatCircleText, index: "06" },
+  { href: "/admin/blog", label: "Blog", description: "Write, preview and prepare technical notes for publishing.", icon: Article, index: "02" },
+  { href: "/admin/capabilities", label: "Capabilities", description: "The services and technical strengths on your profile.", icon: CirclesFour, index: "03" },
+  { href: "/admin/experiences", label: "Experience", description: "Roles, companies, timelines and role highlights.", icon: Briefcase, index: "04" },
+  { href: "/admin/educations", label: "Education", description: "Degrees, institutions and areas of focus.", icon: GraduationCap, index: "05" },
+  { href: "/admin/social-links", label: "Social links", description: "Public destinations shown in contact and footer areas.", icon: LinkSimple, index: "06" },
+  { href: "/admin/contact-messages", label: "Messages", description: "Review and archive incoming portfolio enquiries.", icon: ChatCircleText, index: "07" },
 ];
 
 export default function AdminDashboardPage() {

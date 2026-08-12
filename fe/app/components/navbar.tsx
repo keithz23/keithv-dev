@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { CircleHalf, List, X } from "@phosphor-icons/react";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTheme } from "@/components/theme-provider";
 import type { NavigationLink, Profile } from "@/lib/portfolio-api";
 
@@ -15,6 +17,7 @@ export default function Navbar({
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("home");
+  const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
 
   useEffect(() => {
@@ -105,6 +108,10 @@ export default function Navbar({
                 <span />
               </button>
             ))}
+            <Link href="/blog" aria-current={pathname.startsWith("/blog") ? "page" : undefined} className="nav-link">
+              Writing
+              <span />
+            </Link>
           </div>
 
           <div className="flex items-center justify-end gap-2">
@@ -142,7 +149,7 @@ export default function Navbar({
         </div>
         {open && (
           <div className="border-t border-zinc-200 bg-white px-4 py-3 md:hidden dark:border-zinc-800 dark:bg-zinc-950">
-            {links.map((link) => (
+          {links.map((link) => (
               <button
                 key={link.id}
                 type="button"
@@ -155,6 +162,10 @@ export default function Navbar({
                 </span>
               </button>
             ))}
+            <Link href="/blog" onClick={() => setOpen(false)} className="flex w-full items-center justify-between px-1 py-4 text-left text-sm font-medium">
+              <span>Writing</span>
+              <span className="font-mono text-[10px] text-zinc-400">0{links.length + 1}</span>
+            </Link>
           </div>
         )}
       </nav>

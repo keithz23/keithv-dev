@@ -1,6 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useState } from "react";
 import axios from "axios";
 import { PencilSimple, Plus, Trash, X } from "@phosphor-icons/react";
 import type { ApiError } from "@/lib/auth-api";
@@ -8,6 +11,15 @@ import { useAdminResource, useCreateAdminResource, useDeleteAdminResource, usePa
 import type { AdminRecord } from "@/lib/portfolio-admin-api";
 
 export type Field = { name: string; label: string; type?: "text" | "number" | "url" | "textarea" | "lines"; helper?: string };
+
+function schemaFor(fields: Field[]) {
+  return z.object(Object.fromEntries(fields.map((field) => {
+    if (field.type === "number") return [field.name, z.number().int("Use a whole number").min(0, "Cannot be negative")];
+    if (field.type === "url") return [field.name, z.string().trim().min(1, "This field is required").url("Enter a valid URL")];
+    if (field.type === "lines") return [field.name, z.string().trim().refine((value) => value.split("\n").some((line) => line.trim()), "Add at least one item")];
+    return [field.name, z.string().trim().min(1, "This field is required")];
+  })));
+}
 
 function recordTitle(item: AdminRecord) {
   return String(item.title ?? item.degree ?? item.label ?? item.role ?? "Untitled record");
@@ -22,14 +34,15 @@ export default function SimpleResourceManager({ resource, title, description, fi
   const [showForm, setShowForm] = useState(false);
   const mutation = editing ? patch : create;
   const apiError = axios.isAxiosError<ApiError>(mutation.error) ? mutation.error.response?.data : null;
+  const form = useForm({
+    resolver: zodResolver(schemaFor(fields)),
+  });
 
   const closeForm = () => { setEditing(null); setShowForm(false); mutation.reset(); };
-  const submit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  const submit = (values: Record<string, unknown>) => {
     const input = Object.fromEntries(fields.map((field) => {
-      const value = String(form.get(field.name) ?? "").trim();
-      return [field.name, field.type === "number" ? Number(value) : field.type === "lines" ? value.split("\n").map((line) => line.trim()).filter(Boolean) : value];
+      const value = values[field.name];
+      return [field.name, field.type === "lines" && typeof value === "string" ? value.split("\n").map((line) => line.trim()).filter(Boolean) : value];
     }));
     if (editing) patch.mutate({ id: editing.id, input }, { onSuccess: closeForm });
     else create.mutate(input, { onSuccess: closeForm });
@@ -43,14 +56,15 @@ export default function SimpleResourceManager({ resource, title, description, fi
       </header>
 
       {(showForm || editing) && (
-        <form onSubmit={submit} className="mt-8 border border-black/[.08] bg-white p-5 sm:p-7 dark:border-white/10 dark:bg-zinc-900/40">
+        <form onSubmit={form.handleSubmit(submit)} noValidate className="mt-8 border border-black/[.08] bg-white p-5 sm:p-7 dark:border-white/10 dark:bg-zinc-900/40">
           <div className="flex items-start justify-between gap-5 border-b border-black/[.07] pb-5 dark:border-white/10"><div><p className="font-mono text-[9px] uppercase tracking-[.18em] text-zinc-400">{editing ? "Edit record" : "New record"}</p><h2 className="mt-2 text-xl font-semibold tracking-[-.025em]">{editing ? recordTitle(editing) : `Add ${title.toLowerCase()}`}</h2></div><button type="button" onClick={closeForm} aria-label="Close form" className="grid size-9 place-items-center text-zinc-400 hover:bg-zinc-100 hover:text-zinc-950 dark:hover:bg-zinc-800 dark:hover:text-white"><X size={16} weight="bold" /></button></div>
           <div className="mt-6 grid gap-x-6 gap-y-5 sm:grid-cols-2">
             {fields.map((field) => {
               const wide = field.type === "textarea" || field.type === "lines";
               const value = Array.isArray(editing?.[field.name]) ? (editing?.[field.name] as string[]).join("\n") : String(editing?.[field.name] ?? "");
-              const error = apiError?.fieldErrors[field.name];
-              return <label key={field.name} className={`block text-xs font-medium text-zinc-700 dark:text-zinc-300 ${wide ? "sm:col-span-2" : ""}`}><span>{field.label}</span>{wide ? <textarea name={field.name} required rows={field.type === "lines" ? 6 : 4} defaultValue={value} aria-invalid={Boolean(error)} className="admin-field resize-y" /> : <input name={field.name} required type={field.type ?? "text"} defaultValue={value} aria-invalid={Boolean(error)} className="admin-field" />}{field.helper && <span className="mt-1.5 block text-[11px] leading-5 text-zinc-400">{field.helper}</span>}{error && <span className="mt-1.5 block text-[11px] text-red-600 dark:text-red-400">{error}</span>}</label>;
+              const clientError = form.formState.errors[field.name]?.message;
+              const error = typeof clientError === "string" ? clientError : apiError?.fieldErrors[field.name];
+              return <label key={field.name} className={`block text-xs font-medium text-zinc-700 dark:text-zinc-300 ${wide ? "sm:col-span-2" : ""}`}><span>{field.label}</span>{wide ? <textarea {...form.register(field.name)} rows={field.type === "lines" ? 6 : 4} defaultValue={value} aria-invalid={Boolean(error)} className="admin-field resize-y" /> : <input {...form.register(field.name, field.type === "number" ? { valueAsNumber: true } : undefined)} type={field.type ?? "text"} defaultValue={value} aria-invalid={Boolean(error)} className="admin-field" />}{field.helper && <span className="mt-1.5 block text-[11px] leading-5 text-zinc-400">{field.helper}</span>}{error && <span className="mt-1.5 block text-[11px] text-red-600 dark:text-red-400">{error}</span>}</label>;
             })}
           </div>
           {apiError && <p className="mt-5 border-l-2 border-red-500 bg-red-50 px-4 py-3 text-xs text-red-800 dark:bg-red-950/20 dark:text-red-300">{apiError.message}</p>}

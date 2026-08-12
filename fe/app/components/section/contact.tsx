@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowUpRight,
   Briefcase,
@@ -9,10 +9,18 @@ import {
   MapPin,
   PaperPlaneTilt,
 } from "@phosphor-icons/react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import type { Profile, SocialLink } from "@/lib/portfolio-api";
 import { useSendContactMessage } from "@/lib/contact-queries";
 
-type FieldErrors = Partial<Record<"name" | "email" | "message", string>>;
+const contactSchema = z.object({
+  name: z.string().trim().min(2, "Please enter at least two characters.").max(120, "Use 120 characters or fewer."),
+  email: z.string().trim().min(1, "Email is required.").email("Enter a valid email address.").max(254, "Use 254 characters or fewer."),
+  message: z.string().trim().min(20, "Add a little more context—at least 20 characters.").max(5000, "Use 5000 characters or fewer."),
+});
+
+type ContactFormValues = z.infer<typeof contactSchema>;
 
 export default function ContactSection({
   profile,
@@ -21,38 +29,16 @@ export default function ContactSection({
   profile: Profile;
   socialLinks: SocialLink[];
 }) {
-	const [errors, setErrors] = useState<FieldErrors>({});
   const mutation = useSendContactMessage();
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: { name: "", email: "", message: "" },
+  });
   const github = socialLinks.find((link) => link.label === "GitHub");
   const linkedIn = socialLinks.find((link) => link.label === "LinkedIn");
 
-  const clearError = (field: keyof FieldErrors) => {
-    setErrors((current) =>
-      current[field] ? { ...current, [field]: undefined } : current,
-    );
-		mutation.reset();
-  };
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    const name = String(form.get("name") ?? "").trim();
-    const email = String(form.get("email") ?? "").trim();
-    const message = String(form.get("message") ?? "").trim();
-    const nextErrors: FieldErrors = {};
-
-    if (name.length < 2)
-      nextErrors.name = "Please enter at least two characters.";
-    if (!/^\S+@\S+\.\S+$/.test(email))
-      nextErrors.email = "Enter a valid email address.";
-    if (message.length < 20)
-      nextErrors.message = "Add a little more context—at least 20 characters.";
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length) return;
-
-		mutation.mutate({ name, email, message }, { onSuccess: () => formElement.reset() });
-  };
+  const submit = (data: ContactFormValues) => mutation.mutate(data, { onSuccess: () => form.reset() });
+  const fieldError = (name: keyof ContactFormValues) => form.formState.errors[name]?.message;
 
   return (
     <section
@@ -116,7 +102,7 @@ export default function ContactSection({
           </aside>
 
           <form
-            onSubmit={submit}
+            onSubmit={form.handleSubmit(submit)}
             noValidate
             className="border-t border-zinc-900 pt-7 dark:border-zinc-100"
           >
@@ -124,43 +110,41 @@ export default function ContactSection({
               <label className="field-label">
                 Your name
                 <input
-                  name="name"
+                  {...form.register("name")}
                   autoComplete="name"
-                  onChange={() => clearError("name")}
                   placeholder="How should I address you?"
-                  aria-invalid={Boolean(errors.name)}
-                  aria-describedby={errors.name ? "name-error" : undefined}
+                  aria-invalid={Boolean(fieldError("name"))}
+                  aria-describedby={fieldError("name") ? "name-error" : undefined}
                   className="field-input"
                 />
-                {errors.name && (
+                {fieldError("name") && (
                   <span
                     id="name-error"
                     className="field-error"
                     aria-live="polite"
                   >
-                    {errors.name}
+                    {fieldError("name")}
                   </span>
                 )}
               </label>
               <label className="field-label">
                 Email address
                 <input
-                  name="email"
+                  {...form.register("email")}
                   type="email"
                   autoComplete="email"
-                  onChange={() => clearError("email")}
                   placeholder="you@company.com"
-                  aria-invalid={Boolean(errors.email)}
-                  aria-describedby={errors.email ? "email-error" : undefined}
+                  aria-invalid={Boolean(fieldError("email"))}
+                  aria-describedby={fieldError("email") ? "email-error" : undefined}
                   className="field-input"
                 />
-                {errors.email && (
+                {fieldError("email") && (
                   <span
                     id="email-error"
                     className="field-error"
                     aria-live="polite"
                   >
-                    {errors.email}
+                    {fieldError("email")}
                   </span>
                 )}
               </label>
@@ -168,23 +152,22 @@ export default function ContactSection({
             <label className="field-label mt-7">
               Project or opportunity
               <textarea
-                name="message"
+                {...form.register("message")}
                 rows={6}
-                onChange={() => clearError("message")}
                 placeholder="A little context goes a long way..."
-                aria-invalid={Boolean(errors.message)}
+                aria-invalid={Boolean(fieldError("message"))}
                 aria-describedby={
-                  errors.message ? "message-error" : "message-help"
+                  fieldError("message") ? "message-error" : "message-help"
                 }
                 className="field-input resize-none"
               />
-              {errors.message ? (
+              {fieldError("message") ? (
                 <span
                   id="message-error"
                   className="field-error"
                   aria-live="polite"
                 >
-                  {errors.message}
+                    {fieldError("message")}
                 </span>
               ) : (
                 <span id="message-help" className="field-helper">

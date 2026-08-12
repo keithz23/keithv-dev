@@ -101,6 +101,22 @@ class BeApplicationTests {
 	}
 
 	@Test
+	void adminCanListDraftAndPublishedPosts() throws Exception {
+		mvc.perform(get("/admin/posts").with(adminJwt()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content[*].status", hasItem("DRAFT")))
+			.andExpect(jsonPath("$.content[*].status", hasItem("PUBLISHED")));
+	}
+
+	@Test
+	void adminCanReadPostDetail() throws Exception {
+		mvc.perform(get("/admin/posts/20000000-0000-0000-0000-000000000003").with(adminJwt()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.slug").value("draft-notes-on-blog-search"))
+			.andExpect(jsonPath("$.content").isNotEmpty());
+	}
+
+	@Test
 	void adminCanCreateDraftPost() throws Exception {
 		String payload = """
 			{

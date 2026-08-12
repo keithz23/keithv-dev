@@ -57,6 +57,29 @@ public class BlogService {
 			.toList();
 	}
 
+	@Transactional(readOnly = true)
+	public PageResponse<PostSummaryResponse> getAdminPosts(int page, int size, PostStatus status) {
+		PageRequest pageable = PageRequest.of(normalizePage(page), normalizeSize(size));
+		Page<Post> posts = status == null
+			? postRepository.findAllByOrderByUpdatedAtDesc(pageable)
+			: postRepository.findAllByStatusOrderByUpdatedAtDesc(status, pageable);
+
+		return new PageResponse<>(
+			posts.getContent().stream().map(this::toSummary).toList(),
+			posts.getNumber(),
+			posts.getSize(),
+			posts.getTotalElements(),
+			posts.getTotalPages()
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public PostDetailResponse getAdminPost(UUID id) {
+		return postRepository.findById(id)
+			.map(this::toDetail)
+			.orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+	}
+
 	@Transactional
 	public PostDetailResponse createPost(PostCreateRequest request) {
 		String slug = request.slug().trim();

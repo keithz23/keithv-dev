@@ -15,6 +15,10 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
 	Optional<Post> findBySlugAndStatus(String slug, PostStatus status);
 
+	Page<Post> findAllByOrderByUpdatedAtDesc(Pageable pageable);
+
+	Page<Post> findAllByStatusOrderByUpdatedAtDesc(PostStatus status, Pageable pageable);
+
 	@Query(
 		value = """
 			SELECT p FROM Post p
